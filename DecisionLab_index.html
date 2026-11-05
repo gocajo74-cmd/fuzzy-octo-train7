@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Interactive decision analysis dashboard for payoff tables, decision criteria, probabilities and staged filtering.">
+<meta name="theme-color" content="#14264b">
+<title>DecisionLab | Decision Analysis Dashboard</title>
+<style>
+:root{--ink:#182238;--muted:#66738a;--line:#dce3ee;--paper:#f5f7fb;--panel:#fff;--blue:#315ee8;--blue2:#eaf0ff;--teal:#087f78;--red:#b83b4b;--gold:#946200;--shadow:0 10px 30px rgba(25,42,75,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.5 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+header{background:linear-gradient(120deg,#14264b,#244b91);color:#fff;padding:30px max(20px,calc((100% - 1240px)/2)) 28px}
+.eyebrow{text-transform:uppercase;letter-spacing:.14em;font-size:11px;font-weight:800;opacity:.75}h1{font-size:clamp(27px,4vw,40px);line-height:1.12;margin:7px 0 8px}header p{margin:0;color:#d9e4ff;max-width:760px}
+main{max-width:1240px;margin:24px auto;padding:0 18px 60px}.topbar{display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+select,input,button{font:inherit}select,input{border:1px solid var(--line);border-radius:9px;padding:9px 10px;background:#fff;color:var(--ink);min-width:0}input[type=number]{width:100%;min-width:82px}input:focus,select:focus,button:focus-visible,a:focus-visible{outline:3px solid #9db5ff;outline-offset:2px}
+button{border:0;border-radius:9px;padding:10px 14px;font-weight:700;cursor:pointer;background:var(--blue);color:#fff}button:hover{filter:brightness(.95)}button.secondary{background:#edf1f8;color:#26344d}button.danger{background:#fff0f1;color:var(--red)}button.small{padding:7px 10px;font-size:13px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:20px;margin:16px 0;box-shadow:var(--shadow)}.card h2{font-size:19px;margin:0 0 4px}.sub{color:var(--muted);font-size:13px;margin:0 0 16px}.section-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap}
+.pill{display:inline-flex;border-radius:999px;background:var(--blue2);color:#2449b4;padding:4px 9px;font-size:12px;font-weight:800}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.metric{border:1px solid var(--line);border-radius:12px;padding:14px;background:#fbfcff}.metric .name{font-size:12px;color:var(--muted);font-weight:700}.metric .value{font-size:21px;font-weight:850;margin:5px 0}.metric .winner{font-size:13px;color:var(--teal);font-weight:700}
+.table-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:12px}table{border-collapse:collapse;width:100%;min-width:650px}th,td{padding:10px 9px;text-align:center;border-bottom:1px solid var(--line);border-right:1px solid var(--line)}th{background:#f3f6fc;font-size:12px;color:#44516a}td:first-child,th:first-child{text-align:left;min-width:150px}tr:last-child td{border-bottom:0}td:last-child,th:last-child{border-right:0}.row-name{display:flex;align-items:center;gap:7px}.row-name input{width:100%;min-width:100px}.prob{display:flex;align-items:center;gap:5px}.prob input{max-width:105px}.muted{color:var(--muted)}.notice{padding:11px 13px;border-radius:10px;background:#fff8e8;color:#795600;font-size:13px;margin:12px 0}.error{background:#fff0f1;color:#9e2637}.success{background:#eaf8f4;color:#08685e}.criteria-table td:first-child{font-weight:750}.winner-cell{background:#eaf8f4;font-weight:800;color:#08685e}.tie-note{font-size:12px;color:var(--teal);font-weight:700}
+.stage-list{display:grid;gap:10px}.stage{display:grid;grid-template-columns:42px minmax(150px,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:12px;padding:12px}.stage-num{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;background:var(--blue2);color:#2449b4;font-weight:850}.stage select{width:100%}.stage-result{font-size:13px;color:var(--muted);margin-top:4px}.flow{display:flex;flex-direction:column;align-items:center;gap:8px}.flow-node{width:min(100%,650px);border:1px solid #cdd8ed;background:#f8faff;border-radius:12px;padding:12px 15px;text-align:center}.flow-node strong{display:block}.flow-arrow{color:#7890bc;font-size:22px;line-height:1}.flow-node.final{background:#eaf8f4;border-color:#a9d9cf}.flow-node.empty{background:#fff0f1;border-color:#efb9c0}.barrow{display:grid;grid-template-columns:minmax(100px,160px) 1fr 75px;gap:10px;align-items:center;margin:10px 0;font-size:13px}.barbg{height:12px;border-radius:99px;background:#edf1f7;overflow:hidden}.bar{height:100%;background:linear-gradient(90deg,#315ee8,#5d8bff);border-radius:99px}
+footer{max-width:1240px;margin:0 auto;padding:0 18px 34px;color:var(--muted);font-size:13px}.dev-link{color:#244fc9;font-weight:800}
+@media(max-width:800px){.grid2{grid-template-columns:1fr}.metrics{grid-template-columns:repeat(2,1fr)}}@media(max-width:480px){main{padding:0 11px 40px}.card{padding:15px}.metrics{grid-template-columns:1fr 1fr}.stage{grid-template-columns:32px 1fr}.stage button{grid-column:2}.metric .value{font-size:18px}}
+</style>
+</head>
+<body>
+<header>
+  <div class="eyebrow">Decision science · Interactive workspace</div>
+  <h1>DecisionLab</h1>
+  <p>Compare alternatives under uncertainty, calculate payoff-based criteria, and see exactly how staged filtering narrows the decision.</p>
+</header>
+<main>
+  <div class="topbar">
+    <div><label for="exampleSelect"><strong>Load a preloaded example</strong></label><br><select id="exampleSelect" aria-label="Choose a preloaded decision problem"><option value="farm">Example 1 · Crop investment</option><option value="launch">Example 2 · Product launch</option><option value="custom">Custom / current data</option></select></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="secondary" id="resetBtn">Reset current example</button><button id="addAltTop">＋ Alternative</button><button id="addStateTop">＋ State of nature</button></div>
+  </div>
+
+  <section class="card">
+    <div class="section-head"><div><h2>1. Decision problem</h2><p class="sub">Rename, add, or remove alternatives and states. Enter payoffs and state probabilities below.</p></div><span class="pill" id="counts">3 alternatives · 3 states</span></div>
+    <div class="grid2" style="margin-bottom:15px">
+      <div><label for="problemName"><strong>Problem title</strong></label><input id="problemName" style="width:100%;margin-top:5px" value="Crop investment decision"></div>
+      <div><label for="probMode"><strong>Probability mode</strong></label><select id="probMode" style="width:100%;margin-top:5px"><option value="on">Use probabilities (EMV / Bayes enabled)</option><option value="off">Ignore probabilities (EMV unavailable)</option></select></div>
+    </div>
+    <div class="table-wrap"><table id="payoffTable" aria-label="Editable payoff and probability table"></table></div>
+    <div id="validation" aria-live="polite"></div>
+    <div class="sub" style="margin:10px 0 0">Payoffs may be positive, zero, or negative. Probabilities must be between 0 and 1 and sum to 1 (100%) when probability mode is enabled.</div>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><div><h2>2. Decision criteria</h2><p class="sub">All results recalculate automatically when a payoff, name, or probability changes. Ties are retained.</p></div><span class="pill">Higher payoff = better</span></div>
+    <div class="metrics" id="metricCards"></div>
+    <div style="height:16px"></div>
+    <div class="table-wrap"><table class="criteria-table" id="criteriaTable" aria-label="Decision criteria comparison"></table></div>
+    <p class="sub" style="margin:12px 0 0">Maximax = highest possible payoff. Maximin = highest worst-case payoff. Minimax Regret = lowest maximum opportunity loss. EMV / Bayes = highest probability-weighted expected payoff.</p>
+  </section>
+
+  <section class="card">
+    <div class="section-head"><div><h2>3. Staged filtering</h2><p class="sub">Each stage keeps every alternative tied for the best score on that criterion among the alternatives still remaining.</p></div><button class="secondary small" id="addStage">＋ Add filtering stage</button></div>
+    <div id="stageList" class="stage-list"></div>
+    <div id="filterSummary" style="margin-top:14px"></div>
+  </section>
+
+  <section class="card">
+    <div><h2>4. Filtering flow diagram</h2><p class="sub">The flow diagram updates with the selected stages and shows the alternatives eliminated at every step.</p></div>
+    <div id="flowDiagram" class="flow" role="img" aria-label="Staged filtering flow diagram"></div>
+  </section>
+
+  <section class="card">
+    <div><h2>5. Visual comparison</h2><p class="sub">Alternative scores for the four criteria. For minimization of regret, shorter is better.</p></div>
+    <div id="scoreCharts"></div>
+  </section>
+</main>
+<footer>
+  <strong>AI development record:</strong> <a class="dev-link" id="conversationLink" href="https://chatgpt.com/share/6aecf8b9-64e4-83e8-9fb6-2d57858b3c5b?ogimg=plain" target="_blank" rel="noopener noreferrer">Open the AI development conversation ↗</a>
+  <p>DecisionLab · Editable decision analysis. Calculations use full precision; displayed values are rounded to 2 decimal places. Tie tolerance: 0.0000001.</p>
+</footer>
+<script>
+"use strict";
+const $=id=>document.getElementById(id), EPS=1e-7;
+const examples={
+ farm:{title:"Crop investment decision",alts:["Corn","Soybeans","Wheat"],states:[["Favorable season",.35],["Average season",.40],["Drought",.25]],pay:[[80,55,-20],[65,60,15],[45,50,30]],stages:["maximin","emv","minimaxRegret"]},
+ launch:{title:"Product launch strategy",alts:["Premium launch","Standard launch","Low-cost launch","Delay launch"],states:[["High demand",.30],["Moderate demand",.45],["Low demand",.25]],pay:[[160,70,-80],[120,85,20],[75,65,35],[25,40,55]],stages:["maximax","minimaxRegret","emv","maximin"]}
+};
+let data,stageIds=0,stages=[];
+const criterionInfo={
+ maximax:{label:"Maximax",direction:"max",short:"Best-case payoff"},
+ maximin:{label:"Maximin",direction:"max",short:"Worst-case payoff"},
+ minimaxRegret:{label:"Minimax Regret",direction:"min",short:"Lowest maximum regret"},
+ emv:{label:"EMV / Bayes",direction:"max",short:"Expected monetary value"}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function loadExample(key){const e=examples[key];data={title:e.title,alts:clone(e.alts),states:clone(e.states),pay:clone(e.pay),probMode:true};stages=[];e.stages.forEach(addStageWith);$("exampleSelect").value=key;render()}
+function addStageWith(k){stages.push({id:++stageIds,criterion:k})}
+function addStage(){addStageWith("maximin");renderStages();calculate()}
+function addAlt(){data.alts.push("Alternative "+(data.alts.length+1));data.pay.push(data.states.map(()=>0));$("exampleSelect").value="custom";render()}
+function addState(){
+ const oldCount=data.states.length,newProbability=1/(oldCount+1);
+ const oldProbabilities=data.states.map(s=>s[1]);
+ const validOld=oldProbabilities.every(p=>Number.isFinite(p)&&p>=0&&p<=1);
+ const oldSum=oldProbabilities.reduce((a,b)=>a+b,0);
+ data.states.forEach(s=>{s[1]=validOld&&oldSum>0?s[1]/oldSum*(1-newProbability):(1-newProbability)/oldCount});
+ data.states.push(["State "+(oldCount+1),newProbability]);
+ data.pay.forEach(r=>r.push(0));$("exampleSelect").value="custom";render()
+}
+function removeAlt(i){if(data.alts.length<=1)return;data.alts.splice(i,1);data.pay.splice(i,1);$("exampleSelect").value="custom";render()}
+function removeState(i){
+ if(data.states.length<=1)return;
+ data.states.splice(i,1);data.pay.forEach(r=>r.splice(i,1));
+ const ps=data.states.map(s=>s[1]);const total=ps.reduce((a,b)=>a+b,0);
+ if(ps.every(p=>Number.isFinite(p)&&p>=0)&&total>0)data.states.forEach(s=>s[1]=s[1]/total);
+ else if(ps.every(p=>Number.isFinite(p)&&p>=0))data.states.forEach(s=>s[1]=1/data.states.length);
+ $("exampleSelect").value="custom";render()
+}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+function fmt(x){return Number.isFinite(x)?x.toLocaleString(undefined,{maximumFractionDigits:2,minimumFractionDigits:2}):"—"}
+function renderTable(){
+ let h="<thead><tr><th>Alternative</th>"+data.states.map((s,j)=>`<th><div><input aria-label="State ${j+1} name" data-state-name="${j}" value="${esc(s[0])}" style="width:100%;min-width:110px"><div class='prob'><span>p =</span><input aria-label="Probability for ${esc(s[0])}" data-prob="${j}" type="number" min="0" max="1" step="0.01" value="${s[1]}"></div><button class='danger small' data-remove-state="${j}" ${data.states.length===1?"disabled":""}>Remove</button></div></th>`).join("")+"<th>Action</th></tr></thead><tbody>";
+ data.alts.forEach((a,i)=>{h+="<tr><td><div class='row-name'><input aria-label='Alternative name' data-alt-name='"+i+"' value='"+esc(a)+"'></div></td>";data.states.forEach((s,j)=>h+=`<td><input aria-label="Payoff ${esc(a)} under ${esc(s[0])}" type="number" step="any" data-pay="${i},${j}" value="${data.pay[i][j]}"></td>`);h+=`<td><button class="danger small" data-remove-alt="${i}" ${data.alts.length===1?"disabled":""}>Remove</button></td></tr>`});h+="</tbody>";$("payoffTable").innerHTML=h;
+ $("counts").textContent=`${data.alts.length} alternatives · ${data.states.length} states`;
+ $("problemName").value=data.title;$("probMode").value=data.probMode?"on":"off";
+}
+function readValidation(){
+ const probs=data.states.map(s=>s[1]),sum=probs.reduce((a,b)=>a+b,0);
+ const invalidPay=data.pay.some(r=>r.some(v=>!Number.isFinite(v)));
+ const invalidProb=probs.some(p=>!Number.isFinite(p)||p<0||p>1);
+ const sumBad=Math.abs(sum-1)>EPS;
+ let msg="";
+ if(invalidPay)msg="<div class='notice error'>Enter a valid numeric payoff in every cell. Calculations are paused until all payoff values are valid.</div>";
+ else if(data.probMode&&invalidProb)msg="<div class='notice error'>Each probability must be a number between 0 and 1. Calculations are paused.</div>";
+ else if(data.probMode&&sumBad)msg=`<div class='notice error'>Probabilities currently sum to ${fmt(sum)} (${fmt(sum*100)}%). Adjust them so the total is exactly 1 (100%) to enable EMV / Bayes and probability-based filtering.</div>`;
+ else if(data.probMode)msg=`<div class='notice success'>Probabilities are valid and sum to ${fmt(sum*100)}%.</div>`;
+ else msg="<div class='notice'>Probability mode is off. Maximax, Maximin, and Minimax Regret remain available; EMV / Bayes is disabled.</div>";
+ $("validation").innerHTML=msg;
+ return {validPay:!invalidPay,validProb:!invalidProb&&!sumBad,probSum:sum};
+}
+function compute(){
+ const n=data.alts.length,m=data.states.length;
+ const rowMax=data.pay.map(r=>Math.max(...r)),rowMin=data.pay.map(r=>Math.min(...r));
+ const colMax=Array.from({length:m},(_,j)=>Math.max(...data.pay.map(r=>r[j])));
+ const regrets=data.pay.map(r=>r.map((v,j)=>colMax[j]-v));
+ const maxRegret=regrets.map(r=>Math.max(...r));
+ const emv=data.pay.map(r=>data.probMode?r.reduce((s,v,j)=>s+v*data.states[j][1],0):NaN);
+ return {rowMax,rowMin,maxRegret,emv,regrets};
+}
+function bestIndices(values,direction,subset=null){
+ const ids=subset||values.map((_,i)=>i);if(!ids.length)return [];
+ const valid=ids.filter(i=>Number.isFinite(values[i]));if(!valid.length)return [];
+ const best=direction==="min"?Math.min(...valid.map(i=>values[i])):Math.max(...valid.map(i=>values[i]));
+ return valid.filter(i=>Math.abs(values[i]-best)<=EPS);
+}
+function criterionValues(c,calc){return c==="maximax"?calc.rowMax:c==="maximin"?calc.rowMin:c==="minimaxRegret"?calc.maxRegret:calc.emv}
+function renderCriteria(calc,validation){
+ const defs=[["maximax","Maximax"],["maximin","Maximin"],["minimaxRegret","Minimax Regret"],["emv","EMV / Bayes"]];
+ const valid=validation.validPay;
+ let cards="",rows="";
+ defs.forEach(([key,label])=>{
+  const enabled=valid&&(key!=="emv"||(data.probMode&&validation.validProb));
+  const vals=criterionValues(key,calc),wins=enabled?bestIndices(vals,criterionInfo[key].direction):[];
+  const best=wins.length?vals[wins[0]]:NaN,names=wins.map(i=>data.alts[i]).join(", ");
+  cards+=`<div class="metric"><div class="name">${label}</div><div class="value">${enabled?fmt(best):"—"}</div><div class="winner">${enabled?(wins.length?"Recommended: "+esc(names):"No result"):"Not available"}</div></div>`;
+  rows+=`<tr><td>${label}</td>${data.alts.map((a,i)=>`<td class="${wins.includes(i)?"winner-cell":""}">${enabled?fmt(vals[i]):"—"}${wins.includes(i)?" ✓":""}</td>`).join("")}<td>${enabled?`<strong>${fmt(best)}</strong><div class="tie-note">${wins.length>1?"Tie: ":""}${esc(names)}</div>`:"—"}</td></tr>`;
+ });
+ $("metricCards").innerHTML=cards;
+ $("criteriaTable").innerHTML=`<thead><tr><th>Criterion</th>${data.alts.map(a=>`<th>${esc(a)}</th>`).join("")}<th>Best value / recommendation</th></tr></thead><tbody>${rows}</tbody>`;
+}
+function renderStages(){
+ $("stageList").innerHTML=stages.map((s,i)=>`<div class="stage"><div class="stage-num">${i+1}</div><div><label><strong>Filtering criterion</strong></label><select data-stage="${s.id}">${Object.entries(criterionInfo).map(([k,v])=>`<option value="${k}" ${s.criterion===k?"selected":""}>${v.label}</option>`).join("")}</select><div class="stage-result" id="stageText${s.id}"></div></div><button class="danger small" data-remove-stage="${s.id}">Remove stage</button></div>`).join("");
+}
+function filtering(calc,validation){
+ let survivors=data.alts.map((_,i)=>i),steps=[];
+ for(const st of stages){
+  const c=st.criterion,enabled=validation.validPay&&(c!=="emv"||(data.probMode&&validation.validProb));
+  if(!enabled){steps.push({criterion:c,before:[...survivors],after:[...survivors],removed:[],invalid:true});continue}
+  const vals=criterionValues(c,calc),best=bestIndices(vals,criterionInfo[c].direction,survivors);
+  const after=best,removed=survivors.filter(i=>!after.includes(i));
+  steps.push({criterion:c,before:[...survivors],after:[...after],removed,invalid:false});survivors=after;
+ }
+ return {steps,survivors};
+}
+function renderFiltering(calc,validation){
+ const f=filtering(calc,validation);
+ f.steps.forEach((s,i)=>{const el=$("stageText"+stages[i].id);if(el)el.textContent=s.invalid?"Unavailable: check payoff values and probabilities.":`Kept: ${s.after.map(x=>data.alts[x]).join(", ")||"none"} · Eliminated: ${s.removed.map(x=>data.alts[x]).join(", ")||"none"}`});
+ const names=f.survivors.map(i=>data.alts[i]);
+ $("filterSummary").innerHTML=`<div class="notice ${names.length?"success":"error"}"><strong>Final result:</strong> ${names.length?esc(names.join(", ")):"No alternative remains after applying all stages in this order."}${names.length>1?" (tie)":""}</div>`;
+ let flow=`<div class="flow-node"><strong>Start · ${esc(data.title)}</strong><span>${data.alts.map(esc).join(" · ")}</span></div>`;
+ f.steps.forEach((s,i)=>{flow+=`<div class="flow-arrow">↓</div><div class="flow-node"><strong>Stage ${i+1} · ${criterionInfo[s.criterion].label}</strong><span>${s.invalid?"Not applied — invalid inputs":`Retained: ${s.after.map(x=>esc(data.alts[x])).join(", ")||"None"}`}</span><br><small class="muted">${s.invalid?"":`Eliminated: ${s.removed.map(x=>esc(data.alts[x])).join(", ")||"None"}`}</small></div>`});
+ flow+=`<div class="flow-arrow">↓</div><div class="flow-node final ${names.length?"":"empty"}"><strong>Final outcome</strong><span>${names.length?names.map(esc).join(", "):"No surviving alternative"}</span></div>`;
+ $("flowDiagram").innerHTML=flow;
+}
+function renderCharts(calc,validation){
+ const defs=[["maximax","Maximax",true],["maximin","Maximin",true],["minimaxRegret","Maximum regret",false],["emv","EMV / Bayes",true]];
+ $("scoreCharts").innerHTML=defs.map(([key,label,high])=>{
+  const vals=criterionValues(key,calc),enabled=validation.validPay&&(key!=="emv"||(data.probMode&&validation.validProb));
+  if(!enabled)return `<div class="notice">${label}: unavailable until inputs are valid.</div>`;
+  const finite=vals.filter(Number.isFinite),lo=Math.min(0,...finite),hi=Math.max(0,...finite),range=hi-lo||1;
+  return `<div style="margin:15px 0"><strong>${label}</strong> <span class="muted">(${high?"higher is better":"lower is better"})</span>${vals.map((v,i)=>`<div class="barrow"><span>${esc(data.alts[i])}</span><div class="barbg"><div class="bar" style="width:${Math.max(1,((v-lo)/range)*100)}%"></div></div><strong style="text-align:right">${fmt(v)}</strong></div>`).join("")}</div>`;
+ }).join("");
+}
+function calculate(){const validation=readValidation(),calc=compute();renderCriteria(calc,validation);renderFiltering(calc,validation);renderCharts(calc,validation)}
+function render(){renderTable();renderStages();calculate()}
+$("payoffTable").addEventListener("input",e=>{
+ const t=e.target;
+ if(t.dataset.altName!==undefined){data.alts[+t.dataset.altName]=t.value||"Alternative";calculate();return}
+ if(t.dataset.stateName!==undefined){data.states[+t.dataset.stateName][0]=t.value||"State";calculate();return}
+ if(t.dataset.prob!==undefined){data.states[+t.dataset.prob][1]=t.value===""?NaN:Number(t.value);calculate();return}
+ if(t.dataset.pay!==undefined){const [i,j]=t.dataset.pay.split(",").map(Number);data.pay[i][j]=t.value===""?NaN:Number(t.value);calculate()}
+});
+$("payoffTable").addEventListener("click",e=>{const t=e.target;if(t.dataset.removeAlt!==undefined)removeAlt(+t.dataset.removeAlt);if(t.dataset.removeState!==undefined)removeState(+t.dataset.removeState)});
+$("stageList").addEventListener("change",e=>{if(e.target.dataset.stage){const s=stages.find(x=>x.id===+e.target.dataset.stage);if(s)s.criterion=e.target.value;calculate()}});
+$("stageList").addEventListener("click",e=>{if(e.target.dataset.removeStage){stages=stages.filter(s=>s.id!==+e.target.dataset.removeStage);renderStages();calculate()}});
+$("problemName").addEventListener("input",e=>{data.title=e.target.value;calculate()});
+$("probMode").addEventListener("change",e=>{data.probMode=e.target.value==="on";calculate()});
+$("addAltTop").onclick=addAlt;$("addStateTop").onclick=addState;$("addStage").onclick=addStage;
+$("exampleSelect").onchange=e=>{if(examples[e.target.value])loadExample(e.target.value);else{data.title="Custom decision problem";render()}};
+$("resetBtn").onclick=()=>loadExample($("exampleSelect").value==="custom"?"farm":$("exampleSelect").value);
+loadExample("farm");
+</script>
+</body>
+</html>
